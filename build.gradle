@@ -1,0 +1,92 @@
+plugins {
+    id "cpp"
+    id "visual-studio"
+    id "java"
+    id "idea"
+    id "eclipse"
+    id "maven-publish"
+    id "jaci.openrio.gradle.GradleRIO" version "2018.01.06b"
+}
+
+archivesBaseName = 'MatchData'
+version = '2018.01.07'
+
+// C++ Setup
+model {
+    components {
+        openrio_game_data(NativeLibrarySpec) {
+            targetPlatform 'roborio'
+            sources.cpp {
+                exportedHeaders{
+                    srcDirs = ['src/main/cpp', 'src/main/include']
+                    include '**/*.hpp', '**/*.h'
+                }
+
+                lib library: "wpilib"
+            }
+        }
+    }
+}
+
+// Java Dependencies
+dependencies {
+    compile wpilib()
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+task zipHeaders(type: Zip) {
+    from fileTree('src/main/include')
+    baseName = 'MatchData'
+    classifier = 'headers'
+}
+
+publishing {
+    publications {
+        matchdata(MavenPublication) {
+            groupId 'openrio.powerup'
+            artifactId 'MatchData'
+
+            artifact jar
+
+            artifact sourcesJar {
+                classifier "sources"
+            }
+
+            artifact javadocJar {
+                classifier "javadoc"
+            }
+
+            artifact zipHeaders {
+                classifier "headers"
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url("sftp://imjac.in:22/home/maven/public")
+            credentials {
+                username 'maven'
+                password file(java.nio.file.Paths.get(System.getProperty('user.home')).resolve('imjacinta.maven.cred')).text
+            }
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.4'
+}

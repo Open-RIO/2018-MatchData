@@ -1,0 +1,11 @@
+.gradle
+build
+.idea
+*.ipr
+*.iml
+*.iws
+*.sln
+*.vcxproj
+*.vcxproj.*
+.DS_STORE
+.vs
